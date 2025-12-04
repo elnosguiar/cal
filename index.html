@@ -33,7 +33,7 @@ html, body {
     width:90%;
     max-width:600px;
     max-height: 98vh; 
-    overflow-y: auto; 
+    overflow-y: auto; /* 이 영역에서만 스크롤이 발생합니다. */
     
     background:rgba(10,15,40,0.72);
     box-shadow:0 0 35px #4fa3ff80,inset 0 0 30px #6fb5ff50;
@@ -84,7 +84,6 @@ input:focus, select:focus {border-color: #4fa3ff;}
 .calculate:hover {background:#6dc2ff; box-shadow:0 0 20px #6dc2ff;}
 
 .result-box{
-    /* 💡 [수정] 기본 패딩/마진/보더 적용 */
     margin-top:20px;
     padding:20px;
     background:rgba(10,15,35,0.65);
@@ -94,9 +93,9 @@ input:focus, select:focus {border-color: #4fa3ff;}
     border-left: 5px solid #4fa3ff;
     font-family:'Noto Sans KR', sans-serif; 
     font-weight: 400;
-    transition: all 0.3s ease; /* transition 추가하여 부드럽게 숨겨지도록 */
+    transition: all 0.3s ease; 
 }
-/* 💡 [추가] 내용이 없을 때 완전히 숨김 처리하여 UI를 깔끔하게 유지 */
+/* 내용이 없을 때 완전히 숨김 처리하여 UI를 깔끔하게 유지 */
 .result-box:empty {
     padding: 0;
     margin-top: 0;
@@ -170,14 +169,13 @@ input:focus, select:focus {border-color: #4fa3ff;}
 
 // 💡 [추가] 초기 로드 설정 및 결과창 비우기
 window.onload = function() {
-    // 모든 결과창 초기화 (CSS의 :empty가 적용되도록 비움)
     document.getElementById('dep_result').innerHTML = '';
     document.getElementById('sav_result').innerHTML = '';
     document.getElementById('loan_result').innerHTML = '';
-    updateClock(); // 초기 시계 업데이트
+    updateClock(); 
 };
 
-// 시계 (수정)
+// 시계 
 function updateClock(){
     const now=new Date();
     const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
@@ -185,7 +183,6 @@ function updateClock(){
     const wd=days[now.getDay()];
     const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0'), ss=String(now.getSeconds()).padStart(2,'0');
     
-    // 💡 [수정] clockDisplay에 실시간 시계 표시
     const clockDisplay = document.getElementById("clockDisplay");
     if (clockDisplay) {
         clockDisplay.textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
@@ -199,7 +196,6 @@ function showTab(id,event){
     document.getElementById(id).classList.add("active");
     document.querySelectorAll(".tab-buttons button").forEach(b=>b.classList.remove("active"));
     event.target.classList.add("active");
-    // 💡 [수정] 탭 전환 시 해당 탭의 결과창을 초기화하여 CSS :empty가 적용되도록 비움
     document.getElementById(id + '_result').innerHTML = ''; 
 }
 
@@ -221,12 +217,9 @@ document.querySelectorAll(".num").forEach(input => {
     input.addEventListener("input", function() {
         let raw = this.value.replace(/,/g,"");
         
-        // 숫자, 소수점만 허용
         if (this.classList.contains('amount') || this.classList.contains('month')) {
-            // 정수 및 금액/기간
             raw = raw.replace(/[^\d]/g, "");
         } else {
-            // 이자율 (소수점 허용)
             raw = raw.replace(/[^\d.]/g, "");
             const parts = raw.split('.');
             if(parts.length > 2) raw = parts[0] + '.' + parts[1];
@@ -238,7 +231,6 @@ document.querySelectorAll(".num").forEach(input => {
             if(this.classList.contains('rate')) {
                 this.value = raw;
             } else {
-                // 금액/기간은 콤마 적용
                 const formatted = Number(raw).toLocaleString('ko-KR', { maximumFractionDigits: 0 });
                 this.value = hasDecimal ? formatted + '.' : formatted;
             }
@@ -260,15 +252,16 @@ document.querySelectorAll(".num").forEach(input => {
 });
 
 
-// 💡 [2] 계산 후 정확한 스크롤 함수
+// 💡 [수정] 계산 후 정확한 스크롤 함수 (innerHTML.trim() 체크)
 function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
     
-    if (resultBox && resultBox.innerHTML !== '') { // 결과가 있을 때만 스크롤
+    // 결과 박스에 내용이 있을 경우에만 스크롤 (공백 제외)
+    if (resultBox && resultBox.innerHTML.trim() !== '') { 
         const panel = buttonElement.closest('.calculator-panel');
         if (panel) {
-            // 💡 결과 박스 바로 위로 스크롤 (가장 정확한 위치)
+            // 결과 박스 상단으로 부드럽게 스크롤
             panel.scrollTo({
                 top: resultBox.offsetTop - 20, 
                 behavior: 'smooth'
@@ -294,7 +287,10 @@ function calcDeposit(buttonElement){
     const type=dep_type.value;
     const resultElement = dep_result;
 
-    if (!validateInputs(P, annualRate * 100, m, resultElement)) return;
+    if (!validateInputs(P, annualRate * 100, m, resultElement)) {
+        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        return;
+    }
     
     const taxRate = 0.154;
     let total=0;
@@ -332,7 +328,10 @@ function calcSaving(buttonElement){
     const type = sav_type.value;
     const resultElement = sav_result;
 
-    if (!validateInputs(A, annualRate * 100, n, resultElement)) return;
+    if (!validateInputs(A, annualRate * 100, n, resultElement)) {
+        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        return;
+    }
     
     const taxRate = 0.154;
     let total = 0;
@@ -374,7 +373,10 @@ function calcLoan(buttonElement){
     const type=loan_type.value;
     const resultElement = loan_result;
 
-    if (!validateInputs(L, annualRate * 100, n, resultElement)) return;
+    if (!validateInputs(L, annualRate * 100, n, resultElement)) {
+        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        return;
+    }
     
     const r=annualRate/12;
     let monthly=0, total=0, interest=0;
@@ -384,7 +386,6 @@ function calcLoan(buttonElement){
             monthly = L / n; 
             interest = 0;
         } else {
-            // 원리금균등 상환액 공식: M = P * [ i(1 + i)^n ] / [ (1 + i)^n - 1 ]
             monthly = L * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
             total=monthly*n; 
             interest=total-L;

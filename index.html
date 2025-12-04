@@ -84,6 +84,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 .calculate:hover {background:#6dc2ff; box-shadow:0 0 20px #6dc2ff;}
 
 .result-box{
+    /* 💡 [수정] 기본 패딩/마진/보더 적용 */
     margin-top:20px;
     padding:20px;
     background:rgba(10,15,35,0.65);
@@ -91,9 +92,21 @@ input:focus, select:focus {border-color: #4fa3ff;}
     line-height:1.9;
     text-shadow:0 0 6px #4fa3ff50; 
     border-left: 5px solid #4fa3ff;
-    font-family:'Noto Sans KR', sans-serif; /* 결과 폰트 Noto Sans KR로 명확하게 지정 */
+    font-family:'Noto Sans KR', sans-serif; 
     font-weight: 400;
+    transition: all 0.3s ease; /* transition 추가하여 부드럽게 숨겨지도록 */
 }
+/* 💡 [추가] 내용이 없을 때 완전히 숨김 처리하여 UI를 깔끔하게 유지 */
+.result-box:empty {
+    padding: 0;
+    margin-top: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    min-height: 0;
+    line-height: 0;
+}
+
 .result-box b {color: #a0d8ff; font-weight: 700;}
 </style>
 </head>
@@ -103,7 +116,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 <canvas id="space"></canvas>
 
 <div class="calculator-panel">
-    <div class="clock-box" id="clockDisplay">UNIVERSE FINANCE CALCULATOR</div>
+    <div class="clock-box" id="clockDisplay"></div> 
     <div class="tab-buttons">
         <button class="active" onclick="showTab('deposit',event)">예금</button>
         <button onclick="showTab('saving',event)">적금</button>
@@ -155,24 +168,39 @@ input:focus, select:focus {border-color: #4fa3ff;}
 <script>
 // --- JavaScript 시작 ---
 
-// 시계 (기존과 동일)
+// 💡 [추가] 초기 로드 설정 및 결과창 비우기
+window.onload = function() {
+    // 모든 결과창 초기화 (CSS의 :empty가 적용되도록 비움)
+    document.getElementById('dep_result').innerHTML = '';
+    document.getElementById('sav_result').innerHTML = '';
+    document.getElementById('loan_result').innerHTML = '';
+    updateClock(); // 초기 시계 업데이트
+};
+
+// 시계 (수정)
 function updateClock(){
     const now=new Date();
     const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
     const days=["일","월","화","수","목","금","토"];
     const wd=days[now.getDay()];
     const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0'), ss=String(now.getSeconds()).padStart(2,'0');
-    // clockDisplay.textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
+    
+    // 💡 [수정] clockDisplay에 실시간 시계 표시
+    const clockDisplay = document.getElementById("clockDisplay");
+    if (clockDisplay) {
+        clockDisplay.textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
+    }
 }
-setInterval(updateClock,1000); updateClock();
+setInterval(updateClock,1000); 
 
-// TAB (기존과 동일)
+// TAB (결과창 초기화 로직 추가)
 function showTab(id,event){
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
     document.getElementById(id).classList.add("active");
     document.querySelectorAll(".tab-buttons button").forEach(b=>b.classList.remove("active"));
     event.target.classList.add("active");
-    document.getElementById(id.replace('dep', 'dep').replace('sav', 'sav').replace('loan', 'loan') + '_result').innerHTML = '';
+    // 💡 [수정] 탭 전환 시 해당 탭의 결과창을 초기화하여 CSS :empty가 적용되도록 비움
+    document.getElementById(id + '_result').innerHTML = ''; 
 }
 
 // 💡 콤마/숫자 처리 함수 (addComma, uncomma)
@@ -237,12 +265,12 @@ function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
     
-    if (resultBox) {
+    if (resultBox && resultBox.innerHTML !== '') { // 결과가 있을 때만 스크롤
         const panel = buttonElement.closest('.calculator-panel');
         if (panel) {
             // 💡 결과 박스 바로 위로 스크롤 (가장 정확한 위치)
             panel.scrollTo({
-                top: resultBox.offsetTop - 20, // 결과 박스 상단에서 약간의 여백(20px)을 두고 스크롤
+                top: resultBox.offsetTop - 20, 
                 behavior: 'smooth'
             });
         }
@@ -356,6 +384,7 @@ function calcLoan(buttonElement){
             monthly = L / n; 
             interest = 0;
         } else {
+            // 원리금균등 상환액 공식: M = P * [ i(1 + i)^n ] / [ (1 + i)^n - 1 ]
             monthly = L * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
             total=monthly*n; 
             interest=total-L;

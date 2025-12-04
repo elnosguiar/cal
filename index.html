@@ -4,17 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UNIVERSE FINANCE CALCULATOR</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* 💡 [1] 화면 고정 및 스크롤 방지 */
+/* 💡 [1] CSS 폰트 수정 및 가독성 개선 */
 html, body {
     margin:0; 
     padding:0; 
     height:100%; 
-    font-family:'Orbitron', 'Segoe UI', Arial, sans-serif; 
+    font-family:'Noto Sans KR', 'Segoe UI', Arial, sans-serif; /* 기본 폰트 Noto Sans KR로 변경 */
     background:black; 
     color:#e9f2ff;
-    overflow: hidden; /* 전체 스크롤 및 터치 밀림 방지 */
+    overflow: hidden; 
 }
 
 /* 배경 요소는 fixed로 전체 화면 고정 */
@@ -32,7 +32,7 @@ html, body {
     transform:translate(-50%,-50%);
     width:90%;
     max-width:600px;
-    max-height: 98vh; /* 높이 제한 약간 늘림 */
+    max-height: 98vh; 
     overflow-y: auto; 
     
     background:rgba(10,15,40,0.72);
@@ -45,7 +45,14 @@ html, body {
 }
 .calculator-panel::-webkit-scrollbar {display: none;}
 
-.clock-box{text-align:center;font-size:1.5rem;color:#bcd9ff;margin-bottom:25px;text-shadow:0 0 15px #4fa3ff;}
+.clock-box{
+    text-align:center;
+    font-size:1.5rem;
+    color:#bcd9ff;
+    margin-bottom:25px;
+    text-shadow:0 0 15px #4fa3ff;
+    font-family:'Orbitron', sans-serif; /* 제목은 Orbitron 유지 */
+}
 
 .tab-buttons{display:flex;gap:10px;margin-bottom:20px;}
 .tab-buttons button{flex:1;padding:12px;border:2px solid transparent;border-radius:10px;background:rgba(50,70,120,0.3);color:#d9e6ff;font-size:1rem;cursor:pointer;transition:0.3s ease-out;}
@@ -56,7 +63,6 @@ html, body {
 .tab.active{display:block;}
 label{margin:6px 0 3px;display:block;color:#d0e0ff;text-shadow:0 0 6px #4fa3ff50; font-size: 0.95rem;}
 
-/* 💡 [1] 입력 필드 높이 고정 및 모바일 최적화 */
 input, select{
     width:100%;
     padding:14px;
@@ -69,7 +75,6 @@ input, select{
     outline:none;
     box-shadow:inset 0 0 8px #4fa3ff30; 
     transition: border-color 0.3s;
-    /* 텍스트 필드의 높이/너비 변동 최소화 */
     height: auto; 
     box-sizing: border-box; 
 }
@@ -78,8 +83,18 @@ input:focus, select:focus {border-color: #4fa3ff;}
 .calculate{width:100%;padding:16px;border:none;border-radius:10px;background:#4fa3ff;color:#000;font-size:1.2rem;font-weight:bold;cursor:pointer;margin-top:15px;box-shadow:0 0 15px #4fa3ff; transition: 0.3s ease-out;}
 .calculate:hover {background:#6dc2ff; box-shadow:0 0 20px #6dc2ff;}
 
-.result-box{margin-top:20px;padding:20px;background:rgba(10,15,35,0.65);border-radius:12px;line-height:1.9;text-shadow:0 0 6px #4fa3ff50; border-left: 5px solid #4fa3ff;}
-.result-box b {color: #a0d8ff;}
+.result-box{
+    margin-top:20px;
+    padding:20px;
+    background:rgba(10,15,35,0.65);
+    border-radius:12px;
+    line-height:1.9;
+    text-shadow:0 0 6px #4fa3ff50; 
+    border-left: 5px solid #4fa3ff;
+    font-family:'Noto Sans KR', sans-serif; /* 결과 폰트 Noto Sans KR로 명확하게 지정 */
+    font-weight: 400;
+}
+.result-box b {color: #a0d8ff; font-weight: 700;}
 </style>
 </head>
 <body>
@@ -160,29 +175,21 @@ function showTab(id,event){
     document.getElementById(id.replace('dep', 'dep').replace('sav', 'sav').replace('loan', 'loan') + '_result').innerHTML = '';
 }
 
-// 💡 [3] 콤마 포맷팅 및 [2] 스크롤 로직에 필요한 함수들
-
+// 💡 콤마/숫자 처리 함수 (addComma, uncomma)
 function addComma(num){
-    // 소수점 셋째 자리에서 반올림하여 두 자리까지만 표시
     const fixedNum = Number(num).toFixed(2); 
-    
-    // `.00`으로 끝나는 경우 정수로 변환하여 콤마 표시 (소수점 제거)
     if (fixedNum.endsWith('.00')) {
         return Number(fixedNum).toLocaleString('ko-KR', { maximumFractionDigits: 0 });
     }
-    
-    // 그 외에는 소수점 두 자리까지 유지하며 콤마 표시
     return fixedNum.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 function uncomma(str){
-    // 숫자와 소수점만 남김 (콤마 제거)
     return parseFloat(String(str).replace(/,/g,"").replace(/[^\d.]/g,"")) || 0;
 }
 
-// 💡 [3] 실시간 콤마 입력 처리
+// 💡 실시간 콤마 입력 처리
 document.querySelectorAll(".num").forEach(input => {
-    // 실시간 콤마 포맷팅 처리
     input.addEventListener("input", function() {
         let raw = this.value.replace(/,/g,"");
         
@@ -197,11 +204,9 @@ document.querySelectorAll(".num").forEach(input => {
             if(parts.length > 2) raw = parts[0] + '.' + parts[1];
         }
 
-        // 포맷팅 적용
         if(raw !== "") {
             const hasDecimal = raw.endsWith('.');
             
-            // 이자율은 toLocaleString 대신 직접 포맷팅 (소수점 유연성 위해)
             if(this.classList.contains('rate')) {
                 this.value = raw;
             } else {
@@ -214,14 +219,12 @@ document.querySelectorAll(".num").forEach(input => {
         }
     });
 
-    // 최종 포맷팅 및 정리
     input.addEventListener("blur", function() {
         const val = uncomma(this.value);
         if (val === 0) {
             this.value = "";
         }
         
-        // 이자율의 경우 최대 100% 제한
         if (this.classList.contains('rate') && val > 100) {
             this.value = 100;
         }
@@ -229,28 +232,24 @@ document.querySelectorAll(".num").forEach(input => {
 });
 
 
-// 💡 [2] 계산 후 스크롤 함수
+// 💡 [2] 계산 후 정확한 스크롤 함수
 function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
     
-    // 결과 박스가 보이도록 패널 내부를 스크롤
     if (resultBox) {
-        // 부모 스크롤 컨테이너 (.calculator-panel)
         const panel = buttonElement.closest('.calculator-panel');
         if (panel) {
-            // 스크롤 위치 계산: (현재 스크롤 위치) + (결과 박스 상대 위치) - (패널 높이의 절반)
-            // 즉, 결과 박스를 화면 하단에 가깝게 보이도록 스크롤 위치를 조정
-            const resultOffset = resultBox.offsetTop - panel.offsetTop;
+            // 💡 결과 박스 바로 위로 스크롤 (가장 정확한 위치)
             panel.scrollTo({
-                top: resultOffset - panel.clientHeight * 0.2, // 결과창이 패널의 80% 높이에 오도록
+                top: resultBox.offsetTop - 20, // 결과 박스 상단에서 약간의 여백(20px)을 두고 스크롤
                 behavior: 'smooth'
             });
         }
     }
 }
 
-// 💡 [3] 유효성 검사 함수 (Validation)
+// 💡 유효성 검사 함수 (Validation)
 function validateInputs(P, r, m, resultElement) {
     if (P <= 0 || r < 0 || m <= 0 || isNaN(P) || isNaN(r) || isNaN(m)) {
         resultElement.innerHTML = `<span style="color:#ff6b6b;">❗ 오류: 모든 입력값을 0보다 큰 유효한 숫자로 입력해주세요. (이자율은 0 허용)</span>`;
@@ -294,7 +293,6 @@ function calcDeposit(buttonElement){
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
-    // 💡 [2] 스크롤 실행
     scrollToResult(buttonElement);
 }
 
@@ -337,7 +335,6 @@ function calcSaving(buttonElement){
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
-    // 💡 [2] 스크롤 실행
     scrollToResult(buttonElement);
 }
 
@@ -355,7 +352,6 @@ function calcLoan(buttonElement){
     let monthly=0, total=0, interest=0;
 
     if(type==="amortization"){ // 원리금균등
-        // 분모가 0이 되는 경우 방지
         if (n === 0 || r === 0) {
             monthly = L / n; 
             interest = 0;
@@ -385,7 +381,6 @@ function calcLoan(buttonElement){
         총 이자: ${addComma(interest)}원<br>
         최종 상환액: **${addComma(total)}원**
     `;
-    // 💡 [2] 스크롤 실행
     scrollToResult(buttonElement);
 }
 

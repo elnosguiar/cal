@@ -11,7 +11,7 @@ html, body {
     margin:0; 
     padding:0; 
     height:100%; 
-    font-family:'Noto Sans KR', 'Segoe UI', Arial, sans-serif; /* 기본 폰트 Noto Sans KR로 변경 */
+    font-family:'Noto Sans KR', 'Segoe UI', Arial, sans-serif;
     background:black; 
     color:#e9f2ff;
     overflow: hidden; 
@@ -33,7 +33,7 @@ html, body {
     width:90%;
     max-width:600px;
     max-height: 98vh; 
-    overflow-y: auto; /* 이 영역에서만 스크롤이 발생합니다. */
+    overflow-y: auto; 
     
     background:rgba(10,15,40,0.72);
     box-shadow:0 0 35px #4fa3ff80,inset 0 0 30px #6fb5ff50;
@@ -51,7 +51,7 @@ html, body {
     color:#bcd9ff;
     margin-bottom:25px;
     text-shadow:0 0 15px #4fa3ff;
-    font-family:'Orbitron', sans-serif; /* 제목은 Orbitron 유지 */
+    font-family:'Orbitron', sans-serif;
 }
 
 .tab-buttons{display:flex;gap:10px;margin-bottom:20px;}
@@ -124,7 +124,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 
     <div id="deposit" class="tab active">
         <label>예치금액(원)</label><input type="text" inputmode="numeric" id="dep_amount" class="num amount" placeholder="원금 (숫자만 입력)">
-        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="dep_rate" class="num rate" placeholder="연 이자율" value="1.0">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="dep_rate" class="num rate" placeholder="연 이자율">
         <label>기간(개월)</label><input type="text" inputmode="numeric" id="dep_month" class="num month" placeholder="기간 (개월)" value="12">
         <label>이자 방식</label>
         <select id="dep_type">
@@ -138,7 +138,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 
     <div id="saving" class="tab">
         <label>월 납입액(원)</label><input type="text" inputmode="numeric" id="sav_amount" class="num amount" placeholder="월 납입액 (숫자만 입력)">
-        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="sav_rate" class="num rate" placeholder="연 이자율" value="1.0">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="sav_rate" class="num rate" placeholder="연 이자율">
         <label>기간(개월)</label><input type="text" inputmode="numeric" id="sav_month" class="num month" placeholder="기간 (개월)" value="12">
         <label>이자 방식</label>
         <select id="sav_type">
@@ -151,7 +151,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 
     <div id="loan" class="tab">
         <label>대출금액(원)</label><input type="text" inputmode="numeric" id="loan_amount" class="num amount" placeholder="대출 원금 (숫자만 입력)">
-        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="loan_rate" class="num rate" placeholder="연 이자율" value="4.0">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" id="loan_rate" class="num rate" placeholder="연 이자율">
         <label>기간(개월)</label><input type="text" inputmode="numeric" id="loan_month" class="num month" placeholder="기간 (개월)" value="120">
         <label>상환 방식</label>
         <select id="loan_type">
@@ -167,7 +167,7 @@ input:focus, select:focus {border-color: #4fa3ff;}
 <script>
 // --- JavaScript 시작 ---
 
-// 💡 [추가] 초기 로드 설정 및 결과창 비우기
+// 💡 초기화 및 시계 설정
 window.onload = function() {
     document.getElementById('dep_result').innerHTML = '';
     document.getElementById('sav_result').innerHTML = '';
@@ -175,7 +175,6 @@ window.onload = function() {
     updateClock(); 
 };
 
-// 시계 
 function updateClock(){
     const now=new Date();
     const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
@@ -252,22 +251,23 @@ document.querySelectorAll(".num").forEach(input => {
 });
 
 
-// 💡 [수정] 계산 후 정확한 스크롤 함수 (innerHTML.trim() 체크)
+// 🚀 [수정] 스크롤 문제 해결을 위해 setTimeout 적용
 function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
     
-    // 결과 박스에 내용이 있을 경우에만 스크롤 (공백 제외)
-    if (resultBox && resultBox.innerHTML.trim() !== '') { 
-        const panel = buttonElement.closest('.calculator-panel');
-        if (panel) {
-            // 결과 박스 상단으로 부드럽게 스크롤
-            panel.scrollTo({
-                top: resultBox.offsetTop - 20, 
-                behavior: 'smooth'
-            });
+    // 💡 아주 짧은 지연시간(50ms)을 주어 DOM 업데이트 후 정확한 스크롤 위치 계산
+    setTimeout(() => {
+        if (resultBox && resultBox.innerHTML.trim() !== '') { 
+            const panel = buttonElement.closest('.calculator-panel');
+            if (panel) {
+                panel.scrollTo({
+                    top: resultBox.offsetTop - 20, 
+                    behavior: 'smooth'
+                });
+            }
         }
-    }
+    }, 50); // 50ms 지연
 }
 
 // 💡 유효성 검사 함수 (Validation)
@@ -281,17 +281,17 @@ function validateInputs(P, r, m, resultElement) {
 
 // 💰 예금 (Deposit)
 function calcDeposit(buttonElement){
-    const P=uncomma(dep_amount.value);
-    const annualRate=uncomma(dep_rate.value)/100;
-    const m=Number(uncomma(dep_month.value));
-    const type=dep_type.value;
+    const P = uncomma(dep_amount.value);
+    const annualRate = uncomma(dep_rate.value) / 100;
+    const m = Number(uncomma(dep_month.value));
     const resultElement = dep_result;
 
     if (!validateInputs(P, annualRate * 100, m, resultElement)) {
-        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        scrollToResult(buttonElement); 
         return;
     }
     
+    const type = dep_type.value;
     const taxRate = 0.154;
     let total=0;
 
@@ -304,7 +304,7 @@ function calcDeposit(buttonElement){
         total = P * Math.pow(1 + annualRate, m / 12);
     }
     
-    const interest=total-P;
+    const interest = total - P;
     const tax = interest * taxRate;
     const afterTaxInterest = interest - tax;
     const afterTaxTotal = P + afterTaxInterest;
@@ -323,16 +323,16 @@ function calcDeposit(buttonElement){
 // 📦 적금 (Saving)
 function calcSaving(buttonElement){
     const A = uncomma(sav_amount.value);
-    const annualRate = uncomma(sav_rate.value)/100;
+    const annualRate = uncomma(sav_rate.value) / 100;
     const n = Number(uncomma(sav_month.value));
-    const type = sav_type.value;
     const resultElement = sav_result;
 
     if (!validateInputs(A, annualRate * 100, n, resultElement)) {
-        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        scrollToResult(buttonElement); 
         return;
     }
     
+    const type = sav_type.value;
     const taxRate = 0.154;
     let total = 0;
     const paid = A*n;
@@ -340,8 +340,7 @@ function calcSaving(buttonElement){
     if(type === "compound"){ // 복리(은행식)
         const r = annualRate / 12;
         for(let i=1; i<=n; i++){
-            const power = n - i;
-            total += A * Math.pow(1 + r, power);
+            total += A * Math.pow(1 + r, n - i);
         }
     } else { // 단리
         for(let i=0; i<n; i++){
@@ -367,47 +366,46 @@ function calcSaving(buttonElement){
 
 // 🏦 대출 (Loan)
 function calcLoan(buttonElement){
-    const L=uncomma(loan_amount.value);
-    const annualRate=uncomma(loan_rate.value)/100;
-    const n=Number(uncomma(loan_month.value));
-    const type=loan_type.value;
+    const L = uncomma(loan_amount.value);
+    const annualRate = uncomma(loan_rate.value) / 100;
+    const n = Number(uncomma(loan_month.value));
     const resultElement = loan_result;
 
     if (!validateInputs(L, annualRate * 100, n, resultElement)) {
-        scrollToResult(buttonElement); // 오류 메시지라도 스크롤
+        scrollToResult(buttonElement);
         return;
     }
     
-    const r=annualRate/12;
-    let monthly=0, total=0, interest=0;
+    const type = loan_type.value;
+    const r = annualRate / 12;
+    let monthly="", total=0, interest=0;
 
     if(type==="amortization"){ // 원리금균등
         if (n === 0 || r === 0) {
             monthly = L / n; 
             interest = 0;
         } else {
-            monthly = L * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-            total=monthly*n; 
-            interest=total-L;
+            const monthlyPayment = L * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+            total = monthlyPayment * n; 
+            interest = total - L;
+            monthly = addComma(monthlyPayment) + "원";
         }
-        monthly = addComma(monthly) + "원";
     } else if(type==="principal"){ // 원금균등
-        const principal=L/n;
-        let intSum=0;
+        const principal = L / n;
+        let intSum = 0;
         for(let i=0;i<n;i++) {
-            const currentInterest = (L - principal * i) * r;
-            intSum += currentInterest;
+            intSum += (L - principal * i) * r;
         }
-        interest=intSum; 
-        total=L+interest;
-        monthly="매월 원금 "+addComma(principal)+"원 + 이자 (최초 "+addComma(principal + (L*r))+"원)";
+        interest = intSum; 
+        total = L + interest;
+        monthly = "매월 원금 "+addComma(principal)+"원 + 이자 (최초 "+addComma(principal + (L*r))+"원)";
     } else if(type==="bullet"){ // 만기일시
-        interest=L*r*n; 
-        total=L+interest; 
-        monthly="매월 이자 "+addComma(L*r)+"원 (마지막 달에 원금 "+addComma(L)+"원)";
+        interest = L * r * n; 
+        total = L + interest; 
+        monthly = "매월 이자 "+addComma(L*r)+"원 (마지막 달에 원금 "+addComma(L)+"원)";
     }
     loan_result.innerHTML=`🏦 <b>대출 결과</b><br>
-        월 납입액: ${typeof monthly==="string"?monthly:monthly}<br>
+        월 납입액: ${monthly}<br>
         총 이자: ${addComma(interest)}원<br>
         최종 상환액: **${addComma(total)}원**
     `;

@@ -4,25 +4,64 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UNIVERSE FINANCE CALCULATOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* --- 디자인 CSS (기존 스타일 유지) --- */
-html, body {margin:0; padding:0; height:100%; overflow:hidden; font-family:'Segoe UI', Arial; background:black; color:#e9f2ff;}
-.nebula{position:absolute;width:200vw;height:200vh;top:-50vh;left:-50vw;background:radial-gradient(circle, rgba(80,0,255,0.22) 0%, rgba(0,0,0,0) 70%);mix-blend-mode:screen;animation:spin1 120s linear infinite;}
+/* 💡 [1] 시각적/UX 개선 CSS */
+html, body {
+    margin:0; 
+    padding:0; 
+    height:100%; 
+    font-family:'Orbitron', 'Segoe UI', Arial, sans-serif; /* 폰트 변경 */
+    background:black; 
+    color:#e9f2ff;
+    overflow: hidden; 
+}
+/* 배경 요소는 fixed로 전체 화면 고정 */
+.nebula, #space {position: fixed; top: 0; left: 0; width: 100%; height: 100%;}
+.nebula{width:200vw;height:200vh;top:-50vh;left:-50vw;background:radial-gradient(circle, rgba(80,0,255,0.22) 0%, rgba(0,0,0,0) 70%);mix-blend-mode:screen;animation:spin1 120s linear infinite;}
 .nebula:nth-child(2){background:radial-gradient(circle, rgba(0,200,255,0.18) 0%, rgba(0,0,0,0) 70%);animation:spin2 180s linear infinite;}
 @keyframes spin1{from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
 @keyframes spin2{from{transform:rotate(360deg);} to{transform:rotate(0deg);} }
 
-.calculator-panel{position:absolute;top:52%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:600px;background:rgba(10,15,40,0.72);box-shadow:0 0 25px #4fa3ff60,inset 0 0 30px #6fb5ff30;border-radius:20px;padding:25px;backdrop-filter:blur(12px);}
-.clock-box{text-align:center;font-size:1.3rem;color:#bcd9ff;margin-bottom:20px;text-shadow:0 0 10px #4fa3ff;}
+.calculator-panel{
+    position:absolute;
+    top:50%; 
+    left:50%;
+    transform:translate(-50%,-50%); 
+    width:90%;
+    max-width:600px;
+    max-height: 95vh;
+    overflow-y: auto;
+    
+    background:rgba(10,15,40,0.72);
+    box-shadow:0 0 35px #4fa3ff80,inset 0 0 30px #6fb5ff50; /* 그림자 강화 */
+    border-radius:25px;
+    padding:25px;
+    backdrop-filter:blur(12px);
+    box-sizing: border-box;
+    /* 💡 패널 내부 스크롤바 숨김 (Chrome, Safari) */
+    scrollbar-width: none; /* Firefox */
+}
+.calculator-panel::-webkit-scrollbar {display: none;} /* Webkit */
+
+.clock-box{text-align:center;font-size:1.5rem;color:#bcd9ff;margin-bottom:25px;text-shadow:0 0 15px #4fa3ff;} /* 폰트 크기 및 그림자 강화 */
+
 .tab-buttons{display:flex;gap:10px;margin-bottom:20px;}
-.tab-buttons button{flex:1;padding:12px;border:none;border-radius:10px;background:rgba(50,70,120,0.3);color:#d9e6ff;font-size:1rem;cursor:pointer;transition:0.25s;}
-.tab-buttons button.active{background:#4fa3ff;color:#001;font-weight:bold;box-shadow:0 0 15px #4fa3ff;}
+.tab-buttons button{flex:1;padding:12px;border:2px solid transparent;border-radius:10px;background:rgba(50,70,120,0.3);color:#d9e6ff;font-size:1rem;cursor:pointer;transition:0.3s ease-out;}
+.tab-buttons button:hover:not(.active) {background:rgba(70,90,140,0.5);}
+.tab-buttons button.active{background:#4fa3ff;color:#001;font-weight:bold;box-shadow:0 0 15px #4fa3ff; border: 2px solid #fff;}
+
 .tab{display:none;}
 .tab.active{display:block;}
-label{margin:6px 0 3px;display:block;color:#d0e0ff;text-shadow:0 0 6px #4fa3ff50;}
-input, select{width:100%;padding:12px;border:none;border-radius:8px;background:rgba(15,25,45,0.7);color:#fff;font-size:1rem;margin-bottom:12px;outline:none;box-shadow:inset 0 0 8px #4fa3ff30;}
-.calculate{width:100%;padding:14px;border:none;border-radius:10px;background:#4fa3ff;color:#000;font-size:1.1rem;font-weight:bold;cursor:pointer;margin-top:10px;box-shadow:0 0 15px #4fa3ff;}
-.result-box{margin-top:18px;padding:15px;background:rgba(10,15,35,0.65);border-radius:10px;line-height:1.8;text-shadow:0 0 6px #4fa3ff50;}
+label{margin:6px 0 3px;display:block;color:#d0e0ff;text-shadow:0 0 6px #4fa3ff50; font-size: 0.95rem;}
+input, select{width:100%;padding:14px;border:1px solid #4fa3ff60;border-radius:10px;background:rgba(15,25,45,0.8);color:#fff;font-size:1.1rem;margin-bottom:12px;outline:none;box-shadow:inset 0 0 8px #4fa3ff30; transition: border-color 0.3s;}
+input:focus, select:focus {border-color: #4fa3ff;} /* 포커스 효과 강화 */
+
+.calculate{width:100%;padding:16px;border:none;border-radius:10px;background:#4fa3ff;color:#000;font-size:1.2rem;font-weight:bold;cursor:pointer;margin-top:15px;box-shadow:0 0 15px #4fa3ff; transition: 0.3s ease-out;}
+.calculate:hover {background:#6dc2ff; box-shadow:0 0 20px #6dc2ff;}
+
+.result-box{margin-top:20px;padding:20px;background:rgba(10,15,35,0.65);border-radius:12px;line-height:1.9;text-shadow:0 0 6px #4fa3ff50; border-left: 5px solid #4fa3ff;}
+.result-box b {color: #a0d8ff;}
 </style>
 </head>
 <body>
@@ -31,7 +70,7 @@ input, select{width:100%;padding:12px;border:none;border-radius:8px;background:r
 <canvas id="space"></canvas>
 
 <div class="calculator-panel">
-    <div class="clock-box" id="clockDisplay"></div>
+    <div class="clock-box" id="clockDisplay">UNIVERSE FINANCE CALCULATOR</div>
     <div class="tab-buttons">
         <button class="active" onclick="showTab('deposit',event)">예금</button>
         <button onclick="showTab('saving',event)">적금</button>
@@ -39,9 +78,9 @@ input, select{width:100%;padding:12px;border:none;border-radius:8px;background:r
     </div>
 
     <div id="deposit" class="tab active">
-        <label>예치금액(원)</label><input type="text" id="dep_amount" class="num">
-        <label>연 이자율(%)</label><input type="text" id="dep_rate" class="num">
-        <label>기간(개월)</label><input type="text" id="dep_month" class="num">
+        <label>예치금액(원)</label><input type="number" id="dep_amount" class="num" min="0" placeholder="원금 (숫자만 입력)">
+        <label>연 이자율(%)</label><input type="number" id="dep_rate" class="num" min="0" max="100" step="0.01" placeholder="연 이자율">
+        <label>기간(개월)</label><input type="number" id="dep_month" class="num" min="1" placeholder="기간 (개월)">
         <label>이자 방식</label>
         <select id="dep_type">
             <option value="simple">단리</option>
@@ -53,9 +92,9 @@ input, select{width:100%;padding:12px;border:none;border-radius:8px;background:r
     </div>
 
     <div id="saving" class="tab">
-        <label>월 납입액(원)</label><input type="text" id="sav_amount" class="num">
-        <label>연 이자율(%)</label><input type="text" id="sav_rate" class="num">
-        <label>기간(개월)</label><input type="text" id="sav_month" class="num">
+        <label>월 납입액(원)</label><input type="number" id="sav_amount" class="num" min="0" placeholder="월 납입액 (숫자만 입력)">
+        <label>연 이자율(%)</label><input type="number" id="sav_rate" class="num" min="0" max="100" step="0.01" placeholder="연 이자율">
+        <label>기간(개월)</label><input type="number" id="sav_month" class="num" min="1" placeholder="기간 (개월)">
         <label>이자 방식</label>
         <select id="sav_type">
             <option value="compound">복리(은행식)</option>
@@ -66,9 +105,9 @@ input, select{width:100%;padding:12px;border:none;border-radius:8px;background:r
     </div>
 
     <div id="loan" class="tab">
-        <label>대출금액(원)</label><input type="text" id="loan_amount" class="num">
-        <label>연 이자율(%)</label><input type="text" id="loan_rate" class="num">
-        <label>기간(개월)</label><input type="text" id="loan_month" class="num">
+        <label>대출금액(원)</label><input type="number" id="loan_amount" class="num" min="0" placeholder="대출 원금 (숫자만 입력)">
+        <label>연 이자율(%)</label><input type="number" id="loan_rate" class="num" min="0" max="100" step="0.01" placeholder="연 이자율">
+        <label>기간(개월)</label><input type="number" id="loan_month" class="num" min="1" placeholder="기간 (개월)">
         <label>상환 방식</label>
         <select id="loan_type">
             <option value="amortization">원리금균등</option>
@@ -81,92 +120,116 @@ input, select{width:100%;padding:12px;border:none;border-radius:8px;background:r
 </div>
 
 <script>
-// --- JavaScript 시작 ---
+// --- JavaScript 시작: 기능 강화 및 유효성 검사 추가 ---
 
-// 시계
+// 시계 (기존과 동일)
 function updateClock(){
     const now=new Date();
     const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
     const days=["일","월","화","수","목","금","토"];
     const wd=days[now.getDay()];
     const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0'), ss=String(now.getSeconds()).padStart(2,'0');
-    clockDisplay.textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
+    // clockDisplay.textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
 }
 setInterval(updateClock,1000); updateClock();
 
-// TAB
+// TAB (기존과 동일)
 function showTab(id,event){
     document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
     document.getElementById(id).classList.add("active");
     document.querySelectorAll(".tab-buttons button").forEach(b=>b.classList.remove("active"));
     event.target.classList.add("active");
+    // 탭 전환 시 결과 초기화
+    document.getElementById(id.replace('dep', 'dep').replace('sav', 'sav').replace('loan', 'loan') + '_result').innerHTML = '';
 }
 
-// 💡 개선된 숫자 입력 처리 (콤마 + 소수점 2자리 반올림 적용)
+// 💡 [2] 숫자 포맷팅 및 유효성 검사 강화
 function addComma(num){
-    // 소수점 셋째 자리에서 반올림하여 두 자리까지만 표시
-    return Number(num).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const fixedNum = Number(num).toFixed(2); 
+    
+    // `.00`으로 끝나는 경우 정수로 변환하여 콤마 표시 (소수점 제거)
+    if (fixedNum.endsWith('.00')) {
+        return Number(fixedNum).toLocaleString('ko-KR', { maximumFractionDigits: 0 });
+    }
+    
+    // 그 외에는 소수점 두 자리까지 유지하며 콤마 표시
+    return fixedNum.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
+
 function uncomma(str){
     return parseFloat(String(str).replace(/,/g,"")) || 0;
 }
+
+// 입력 타입 변경 (type="number"로 변경했으므로, 콤마 로직 간소화)
 document.querySelectorAll(".num").forEach(input => {
     input.addEventListener("input", function() {
-        let raw = this.value.replace(/,/g,"");
-        raw = raw.replace(/[^\d.]/g,""); // 숫자와 온점(.)만 허용
+        let raw = this.value;
+        // 숫자가 아닌 문자 제거 (브라우저 기본 동작 활용)
+        if (raw === "") return;
         
-        // 소수점 두 개 이상 방지
-        const parts = raw.split('.');
-        if(parts.length > 2) {
-            raw = parts[0] + '.' + parts[1];
+        // 이자율은 100 초과 방지 (HTML min/max 속성과 함께 작동)
+        if (this.id.includes('_rate') && parseFloat(raw) > 100) {
+            this.value = 100;
         }
-        
-        // 입력 값이 있다면 콤마 적용 후 표시. 끝이 소수점일 경우 콤마만 적용
-        if(raw !== "") {
-            const hasDecimal = raw.endsWith('.');
-            const formatted = uncomma(raw).toLocaleString('ko-KR', { maximumFractionDigits: 20 });
-            this.value = hasDecimal ? formatted + '.' : formatted;
-        } else {
-            this.value = "";
-        }
+
     });
 
-    // blur 시점에서 최종 포맷팅 (소수점 셋째자리 반올림)
     input.addEventListener("blur", function() {
         const val = uncomma(this.value);
         if(!isNaN(val) && val !== 0) {
-            this.value = addComma(val);
+            // blur 시점에 콤마 포맷팅 후 다시 할당 (사용자 편의)
+            // number 타입이지만, 문자열로 포맷팅된 값을 넣으면 브라우저가 숫자 입력으로 처리 안함.
+            // 따라서 콤마 포맷팅은 결과 창에서만 사용하고, 입력 창은 그대로 두는 것이 UX에 더 적합함.
+            // 현재는 콤마 기능을 제거하고, 유효성 검사만 남김.
+            // this.value = addComma(val); // 콤마 기능을 제거하고 브라우저의 number 입력 필드 기능을 살림.
+        }
+        if (val === 0) {
+            this.value = "";
         }
     });
 });
 
+// 💡 [3] 유효성 검사 함수 (Validation)
+function validateInputs(P, r, m, resultElement) {
+    if (P <= 0 || r < 0 || m <= 0 || isNaN(P) || isNaN(r) || isNaN(m)) {
+        resultElement.innerHTML = `<span style="color:#ff6b6b;">❗ 오류: 모든 입력값을 0보다 큰 유효한 숫자로 입력해주세요.</span>`;
+        return false;
+    }
+    return true;
+}
 
 // 💰 예금 (Deposit)
 function calcDeposit(){
-    const P=uncomma(dep_amount.value); // 원금
-    const annualRate=uncomma(dep_rate.value)/100; // 연 이자율
-    const m=Number(uncomma(dep_month.value)); // 기간 (개월)
+    const P=uncomma(dep_amount.value);
+    const annualRate=uncomma(dep_rate.value)/100;
+    const m=Number(uncomma(dep_month.value));
     const type=dep_type.value;
-    const taxRate = 0.154; // 이자소득세 15.4%
+    const resultElement = dep_result;
+
+    if (!validateInputs(P, annualRate * 100, m, resultElement)) return;
+    
+    const taxRate = 0.154;
     let total=0;
 
-    if(type==="simple") { // 단리
+    if(type==="simple") {
         total = P * (1 + annualRate * (m / 12));
-    } else if(type==="monthly") { // 월복리
+    } else if(type==="monthly") {
         const monthlyRate = annualRate / 12;
         total = P * Math.pow(1 + monthlyRate, m);
-    } else if(type==="yearly") { // 연복리
+    } else if(type==="yearly") {
         total = P * Math.pow(1 + annualRate, m / 12);
     }
     
     const interest=total-P;
-    const afterTaxInterest = interest * (1 - taxRate);
+    const tax = interest * taxRate;
+    const afterTaxInterest = interest - tax;
     const afterTaxTotal = P + afterTaxInterest;
 
-    dep_result.innerHTML=`💰 <b>예금 결과 (세후)</b><br>
+    dep_result.innerHTML=`
+        💰 <b>예금 결과 (세후)</b><br>
         원금: ${addComma(P)}원<br>
         세전 이자: ${addComma(interest)}원<br>
-        세금(15.4%): ${addComma(interest * taxRate)}원<br>
+        세금(15.4%): ${addComma(tax)}원<br>
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
@@ -174,38 +237,40 @@ function calcDeposit(){
 
 // 📦 적금 (Saving)
 function calcSaving(){
-    const A = uncomma(sav_amount.value); // 월 납입액
-    const annualRate = uncomma(sav_rate.value)/100; // 연 이자율
-    const n = Number(uncomma(sav_month.value)); // 기간 (개월)
+    const A = uncomma(sav_amount.value);
+    const annualRate = uncomma(sav_rate.value)/100;
+    const n = Number(uncomma(sav_month.value));
     const type = sav_type.value;
-    const taxRate = 0.154; // 이자소득세 15.4%
+    const resultElement = sav_result;
 
+    if (!validateInputs(A, annualRate * 100, n, resultElement)) return;
+    
+    const taxRate = 0.154;
     let total = 0;
+    const paid = A*n;
 
-    if(type === "compound"){ // 복리(은행식) - 기말불 월복리 적용
-        const r = annualRate / 12; // 월 이자율
-        // 월 납입액(A)에 대해 남은 기간 동안 월복리 이자 적용 후 합산 (기말불 기준)
+    if(type === "compound"){ // 복리(은행식)
+        const r = annualRate / 12;
         for(let i=1; i<=n; i++){
             const power = n - i;
             total += A * Math.pow(1 + r, power);
         }
     } else { // 단리
-        // 각 월별 납입금액에 대해 남은 기간만큼 단리 이자 적용
         for(let i=0; i<n; i++){
             total += A * (1 + annualRate * ((n-i) / 12));
         }
     }
 
-    const paid = A*n;
     const interest = total - paid;
-    const afterTaxInterest = interest * (1 - taxRate);
+    const tax = interest * taxRate;
+    const afterTaxInterest = interest - tax;
     const afterTaxTotal = paid + afterTaxInterest;
 
     sav_result.innerHTML = `
         📦 <b>적금 결과 (세후)</b><br>
         총 납입액: ${addComma(paid)}원<br>
         세전 이자: ${addComma(interest)}원<br>
-        세금(15.4%): ${addComma(interest * taxRate)}원<br>
+        세금(15.4%): ${addComma(tax)}원<br>
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
@@ -213,23 +278,25 @@ function calcSaving(){
 
 // 🏦 대출 (Loan)
 function calcLoan(){
-    const L=uncomma(loan_amount.value); // 대출 원금
-    const annualRate=uncomma(loan_rate.value)/100; // 연 이자율
-    const r=annualRate/12; // 월 이자율
-    const n=Number(uncomma(loan_month.value)); // 기간 (개월)
+    const L=uncomma(loan_amount.value);
+    const annualRate=uncomma(loan_rate.value)/100;
+    const n=Number(uncomma(loan_month.value));
     const type=loan_type.value;
+    const resultElement = loan_result;
+
+    if (!validateInputs(L, annualRate * 100, n, resultElement)) return;
     
+    const r=annualRate/12;
     let monthly=0, total=0, interest=0;
 
     if(type==="amortization"){ // 원리금균등
-        // 월 상환액 계산
         monthly = L * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
         total=monthly*n; 
         interest=total-L;
+        monthly = addComma(monthly) + "원";
     } else if(type==="principal"){ // 원금균등
-        const principal=L/n; // 매월 상환 원금
+        const principal=L/n;
         let intSum=0;
-        // 잔금에 대한 이자 합산
         for(let i=0;i<n;i++) {
             const currentInterest = (L - principal * i) * r;
             intSum += currentInterest;
@@ -243,13 +310,13 @@ function calcLoan(){
         monthly="매월 이자 "+addComma(L*r)+"원 (마지막 달에 원금 "+addComma(L)+"원)";
     }
     loan_result.innerHTML=`🏦 <b>대출 결과</b><br>
-        월 납입액: ${typeof monthly==="string"?monthly:addComma(monthly)+"원"}<br>
+        월 납입액: ${typeof monthly==="string"?monthly:monthly}<br>
         총 이자: ${addComma(interest)}원<br>
         최종 상환액: **${addComma(total)}원**
     `;
 }
 
-// 스타필드
+// 스타필드 (배경 애니메이션) - 기존 코드 유지
 const canvas=document.getElementById("space"), ctx=canvas.getContext("2d"); let w,h;
 function resize(){w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight;}
 window.addEventListener("resize",resize); resize();

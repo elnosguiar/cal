@@ -13,6 +13,7 @@ html, body {
     background:black; color:#e9f2ff;
     overflow: hidden; 
     touch-action: manipulation; /* 모바일 더블 탭 줌 방지 */
+    scroll-behavior: smooth; /* 스크롤 부드럽게 */
 }
 
 /* --- Background (Nebula & Stars) --- */
@@ -144,10 +145,12 @@ input:focus, select:focus {border-color: #4fa3ff;}
 
 // 💡 초기화 및 시계 설정
 window.onload = function() {
+    // 초기화 시 모든 결과창 비우기
     document.getElementById('dep_result').innerHTML = '';
     document.getElementById('sav_result').innerHTML = '';
     document.getElementById('loan_result').innerHTML = '';
     updateClock(); 
+    initScrollObserver(); // 💡 [추가] 스크롤 옵저버 초기화
 };
 
 // 시계 업데이트
@@ -188,7 +191,7 @@ function uncomma(str){
     return parseFloat(String(str).replace(/,/g,"").replace(/[^\d.]/g,"")) || 0;
 }
 
-// 💡 실시간 콤마 입력 처리
+// 💡 실시간 콤마 입력 처리 (기존 로직 유지)
 document.querySelectorAll(".num").forEach(input => {
     input.addEventListener("input", function() {
         let raw = this.value.replace(/,/g,"");
@@ -227,26 +230,41 @@ document.querySelectorAll(".num").forEach(input => {
     });
 });
 
-
-// 🚀 [개선된 로직] 스크롤 (DOM 업데이트 후 실행 보장)
-function scrollToResult(buttonElement) {
-    const parentTab = buttonElement.closest('.tab');
-    const resultBox = parentTab.querySelector('.result-box');
-    const panel = buttonElement.closest('.calculator-panel');
-
-    // 1. requestAnimationFrame을 사용하여 다음 애니메이션 프레임에 스크롤 명령 예약
-    requestAnimationFrame(() => {
-        // 2. setTimeout을 사용하여 브라우저가 DOM을 최종적으로 그리고 난 후 (약간의 여유 시간 후) 스크롤 실행
-        setTimeout(() => {
-            if (resultBox && resultBox.innerHTML.trim() !== '' && panel) { 
-                panel.scrollTo({
-                    top: resultBox.offsetTop - 20, 
-                    behavior: 'smooth'
-                });
+// 🚀 [해결 로직] MutationObserver를 사용하여 DOM 변경 감지 후 스크롤
+function initScrollObserver() {
+    const observerCallback = function(mutationsList, observer) {
+        // mutationsList에는 변경된 내용 목록이 들어 있음
+        for (const mutation of mutationsList) {
+            if (mutation.type === 'childList' && mutation.target.innerHTML.trim() !== '') {
+                const resultBox = mutation.target;
+                const panel = resultBox.closest('.calculator-panel');
+                
+                if (panel) {
+                    // DOM 변경이 완료된 것을 확인 후, 다음 프레임에 스크롤 명령 실행
+                    requestAnimationFrame(() => {
+                         panel.scrollTo({
+                            top: resultBox.offsetTop - 20, 
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+                // 스크롤 명령을 수행했으므로 옵저버 해제 (계속 감시할 필요 없음)
+                // observer.disconnect(); // 하나의 옵저버로 모든 결과창을 감시하기 위해 disconnect를 제거하고 스크롤만 실행
             }
-        }, 50); // 50ms 지연
+        }
+    };
+
+    // 설정: 자식 노드 추가/제거 감시
+    const observerConfig = { childList: true };
+
+    // 모든 결과창에 옵저버 연결
+    const resultBoxes = document.querySelectorAll('.result-box');
+    resultBoxes.forEach(box => {
+        const observer = new MutationObserver(observerCallback);
+        observer.observe(box, observerConfig);
     });
 }
+
 
 // 💡 유효성 검사 (오류 시 필드 포커싱)
 function validateInputs(P, r, m, P_el, r_el, m_el) {
@@ -306,7 +324,7 @@ function calcDeposit(buttonElement){
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
-    scrollToResult(buttonElement);
+    // scrollToResult(buttonElement); // 💡 스크롤 함수 대신 옵저버가 자동 실행
 }
 
 // 📦 적금 계산
@@ -346,7 +364,7 @@ function calcSaving(buttonElement){
         세후 이자: **${addComma(afterTaxInterest)}원**<br>
         만기수령액: **${addComma(afterTaxTotal)}원**
     `;
-    scrollToResult(buttonElement);
+    // scrollToResult(buttonElement); // 💡 스크롤 함수 대신 옵저버가 자동 실행
 }
 
 // 🏦 대출 계산
@@ -390,7 +408,7 @@ function calcLoan(buttonElement){
         총 이자: ${addComma(interest)}원<br>
         최종 상환액: **${addComma(total)}원**
     `;
-    scrollToResult(buttonElement);
+    // scrollToResult(buttonElement); // 💡 스크롤 함수 대신 옵저버가 자동 실행
 }
 
 // --- Starfield Background Animation ---

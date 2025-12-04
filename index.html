@@ -228,22 +228,24 @@ document.querySelectorAll(".num").forEach(input => {
 });
 
 
-// 🚀 스크롤 (DOM 업데이트 지연 문제 해결을 위해 setTimeout 사용)
+// 🚀 [개선된 로직] 스크롤 (DOM 업데이트 후 실행 보장)
 function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
-    
-    setTimeout(() => {
-        if (resultBox && resultBox.innerHTML.trim() !== '') { 
-            const panel = buttonElement.closest('.calculator-panel');
-            if (panel) {
+    const panel = buttonElement.closest('.calculator-panel');
+
+    // 1. requestAnimationFrame을 사용하여 다음 애니메이션 프레임에 스크롤 명령 예약
+    requestAnimationFrame(() => {
+        // 2. setTimeout을 사용하여 브라우저가 DOM을 최종적으로 그리고 난 후 (약간의 여유 시간 후) 스크롤 실행
+        setTimeout(() => {
+            if (resultBox && resultBox.innerHTML.trim() !== '' && panel) { 
                 panel.scrollTo({
                     top: resultBox.offsetTop - 20, 
                     behavior: 'smooth'
                 });
             }
-        }
-    }, 50); 
+        }, 50); // 50ms 지연
+    });
 }
 
 // 💡 유효성 검사 (오류 시 필드 포커싱)

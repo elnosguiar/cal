@@ -2,11 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> 
 <title>UNIVERSE FINANCE CALCULATOR</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* 💡 [1] CSS 폰트 수정 및 가독성 개선 */
 html, body {
     margin:0; 
     padding:0; 
@@ -15,6 +14,8 @@ html, body {
     background:black; 
     color:#e9f2ff;
     overflow: hidden; 
+    /* 💡 [유지] 모바일 환경에서 터치 확대 방지 (더블 탭 줌 방지) */
+    touch-action: manipulation;
 }
 
 /* 배경 요소는 fixed로 전체 화면 고정 */
@@ -251,12 +252,12 @@ document.querySelectorAll(".num").forEach(input => {
 });
 
 
-// 🚀 [수정] 스크롤 문제 해결을 위해 setTimeout 적용
+// 🚀 스크롤 문제 해결을 위해 setTimeout 적용
 function scrollToResult(buttonElement) {
     const parentTab = buttonElement.closest('.tab');
     const resultBox = parentTab.querySelector('.result-box');
     
-    // 💡 아주 짧은 지연시간(50ms)을 주어 DOM 업데이트 후 정확한 스크롤 위치 계산
+    // 50ms 지연시간을 주어 DOM 업데이트 후 정확한 스크롤 위치 계산
     setTimeout(() => {
         if (resultBox && resultBox.innerHTML.trim() !== '') { 
             const panel = buttonElement.closest('.calculator-panel');
@@ -267,13 +268,26 @@ function scrollToResult(buttonElement) {
                 });
             }
         }
-    }, 50); // 50ms 지연
+    }, 50); 
 }
 
-// 💡 유효성 검사 함수 (Validation)
-function validateInputs(P, r, m, resultElement) {
-    if (P <= 0 || r < 0 || m <= 0 || isNaN(P) || isNaN(r) || isNaN(m)) {
-        resultElement.innerHTML = `<span style="color:#ff6b6b;">❗ 오류: 모든 입력값을 0보다 큰 유효한 숫자로 입력해주세요. (이자율은 0 허용)</span>`;
+// 💡 [유지] 유효성 검사 함수 (Validation) - 오류 필드 포커싱
+function validateInputs(P, r, m, P_el, r_el, m_el) {
+    let focusElement = null;
+
+    if (P <= 0 || isNaN(P)) {
+        focusElement = P_el;
+    } else if (r < 0 || isNaN(r)) {
+        focusElement = r_el;
+    } else if (m <= 0 || isNaN(m)) {
+        focusElement = m_el;
+    }
+
+    if (focusElement) {
+        focusElement.focus();
+        const parentTab = focusElement.closest('.tab');
+        const resultBox = parentTab.querySelector('.result-box');
+        resultBox.innerHTML = '';
         return false;
     }
     return true;
@@ -284,24 +298,26 @@ function calcDeposit(buttonElement){
     const P = uncomma(dep_amount.value);
     const annualRate = uncomma(dep_rate.value) / 100;
     const m = Number(uncomma(dep_month.value));
-    const resultElement = dep_result;
 
-    if (!validateInputs(P, annualRate * 100, m, resultElement)) {
-        scrollToResult(buttonElement); 
-        return;
-    }
+    if (!validateInputs(P, annualRate * 100, m, dep_amount, dep_rate, dep_month)) return;
     
     const type = dep_type.value;
     const taxRate = 0.154;
     let total=0;
+    
+    // 복리 계산을 위한 월 이자율 및 연 이자율
+    const monthlyRate = annualRate / 12;
+    const years = m / 12;
 
     if(type==="simple") {
-        total = P * (1 + annualRate * (m / 12));
+        // 단리: 원금 * (1 + 연이율 * 기간(년))
+        total = P * (1 + annualRate * years);
     } else if(type==="monthly") {
-        const monthlyRate = annualRate / 12;
-        total = P * Math.pow(1 + monthlyRate, m);
+        // 💡 [복구] 월복리: 원금 * (1 + 월이율) ^ 총 개월 수
+        total = P * Math.pow(1 + monthlyRate, m); 
     } else if(type==="yearly") {
-        total = P * Math.pow(1 + annualRate, m / 12);
+        // 💡 [복구] 연복리: 원금 * (1 + 연이율) ^ 총 년 수
+        total = P * Math.pow(1 + annualRate, years);
     }
     
     const interest = total - P;
@@ -325,22 +341,18 @@ function calcSaving(buttonElement){
     const A = uncomma(sav_amount.value);
     const annualRate = uncomma(sav_rate.value) / 100;
     const n = Number(uncomma(sav_month.value));
-    const resultElement = sav_result;
 
-    if (!validateInputs(A, annualRate * 100, n, resultElement)) {
-        scrollToResult(buttonElement); 
-        return;
-    }
+    if (!validateInputs(A, annualRate * 100, n, sav_amount, sav_rate, sav_month)) return;
     
     const type = sav_type.value;
     const taxRate = 0.154;
     let total = 0;
     const paid = A*n;
+    const monthlyRate = annualRate / 12;
 
     if(type === "compound"){ // 복리(은행식)
-        const r = annualRate / 12;
         for(let i=1; i<=n; i++){
-            total += A * Math.pow(1 + r, n - i);
+            total += A * Math.pow(1 + monthlyRate, n - i);
         }
     } else { // 단리
         for(let i=0; i<n; i++){
@@ -369,12 +381,8 @@ function calcLoan(buttonElement){
     const L = uncomma(loan_amount.value);
     const annualRate = uncomma(loan_rate.value) / 100;
     const n = Number(uncomma(loan_month.value));
-    const resultElement = loan_result;
 
-    if (!validateInputs(L, annualRate * 100, n, resultElement)) {
-        scrollToResult(buttonElement);
-        return;
-    }
+    if (!validateInputs(L, annualRate * 100, n, loan_amount, loan_rate, loan_month)) return;
     
     const type = loan_type.value;
     const r = annualRate / 12;

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNIVERSE FINANCE CALCULATOR</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ===== 기본 스타일 ===== */
+html, body {
+  margin:0; padding:0; height:100%;
+  font-family:'Noto Sans KR','Segoe UI',Arial,sans-serif;
+  background:black; color:#e9f2ff; overflow:hidden;
+}
+
+/* 배경 */
+.nebula, #space {position:fixed; top:0; left:0; width:100%; height:100%;}
+.nebula{width:200vw;height:200vh;top:-50vh;left:-50vw;background:radial-gradient(circle, rgba(80,0,255,0.22) 0%, rgba(0,0,0,0) 70%);mix-blend-mode:screen;animation:spin1 120s linear infinite;}
+.nebula:nth-child(2){background:radial-gradient(circle, rgba(0,200,255,0.18) 0%, rgba(0,0,0,0) 70%);animation:spin2 180s linear infinite;}
+@keyframes spin1{0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);}}
+@keyframes spin2{0%{transform:rotate(360deg);} 100%{transform:rotate(0deg);}}
+
+/* 계산기 패널 */
+.calculator-panel{
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:90%; max-width:600px; max-height:98vh; overflow-y:auto;
+  background:rgba(10,15,40,0.72); box-shadow:0 0 35px #4fa3ff80,inset 0 0 30px #6fb5ff50;
+  border-radius:25px; padding:25px; backdrop-filter:blur(12px); box-sizing:border-box;
+  scrollbar-width:none;
+}
+.calculator-panel::-webkit-scrollbar {display:none;}
+.clock-box{
+  text-align:center; font-size:1.5rem; color:#bcd9ff; margin-bottom:25px;
+  text-shadow:0 0 15px #4fa3ff; font-family:'Orbitron',sans-serif;
+}
+
+/* 탭 버튼 */
+.tab-buttons{display:flex; gap:10px; margin-bottom:20px;}
+.tab-buttons button{
+  flex:1; padding:12px; border:2px solid transparent; border-radius:10px;
+  background:rgba(50,70,120,0.3); color:#d9e6ff; font-size:1rem; cursor:pointer; transition:0.3s;
+}
+.tab-buttons button:hover:not(.active) {background:rgba(70,90,140,0.5);}
+.tab-buttons button.active{background:#4fa3ff; color:#001; font-weight:bold; box-shadow:0 0 15px #4fa3ff; border:2px solid #fff;}
+
+.tab{display:none;}
+.tab.active{display:block;}
+
+label{margin:6px 0 3px; display:block; color:#d0e0ff; text-shadow:0 0 6px #4fa3ff50; font-size:0.95rem;}
+input, select{
+  width:100%; padding:14px; border:1px solid #4fa3ff60; border-radius:10px;
+  background:rgba(15,25,45,0.8); color:#fff; font-size:1.1rem; margin-bottom:12px;
+  outline:none; box-shadow:inset 0 0 8px #4fa3ff30; transition:border-color 0.3s;
+  height:auto; box-sizing:border-box;
+}
+input:focus, select:focus {border-color:#4fa3ff;}
+.calculate{
+  width:100%; padding:16px; border:none; border-radius:10px; background:#4fa3ff;
+  color:#000; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:15px;
+  box-shadow:0 0 15px #4fa3ff; transition:0.3s;
+}
+.calculate:hover {background:#6dc2ff; box-shadow:0 0 20px #6dc2ff;}
+.result-box{
+  margin-top:20px; padding:20px; background:rgba(10,15,35,0.65);
+  border-radius:12px; line-height:1.9; text-shadow:0 0 6px #4fa3ff50;
+  border-left:5px solid #4fa3ff; font-family:'Noto Sans KR',sans-serif; font-weight:400;
+}
+.result-box b {color:#a0d8ff; font-weight:700;}
+
+/* 반응형 */
+@media(max-width:480px){.calculator-panel{padding:15px;}}
+</style>
+</head>
+<body>
+<div class="nebula"></div>
+<div class="nebula"></div>
+<canvas id="space"></canvas>
+
+<div class="calculator-panel">
+    <div class="clock-box" id="clockDisplay">UNIVERSE FINANCE CALCULATOR</div>
+    <div class="tab-buttons">
+        <button class="active" data-tab="deposit">예금</button>
+        <button data-tab="saving">적금</button>
+        <button data-tab="loan">대출</button>
+    </div>
+
+    <!-- 탭별 공통 클래스 'tab'와 dataset 사용 -->
+    <div id="deposit" class="tab active">
+        <label>예치금액(원)</label><input type="text" inputmode="numeric" data-key="amount" placeholder="원금">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" data-key="rate" placeholder="연 이자율" value="1.0">
+        <label>기간(개월)</label><input type="text" inputmode="numeric" data-key="month" placeholder="기간" value="12">
+        <label>이자 방식</label>
+        <select data-key="type">
+            <option value="simple">단리</option>
+            <option value="monthly">월복리</option>
+            <option value="yearly">연복리</option>
+        </select>
+        <button class="calculate" data-type="deposit">계산하기</button>
+        <div class="result-box"></div>
+    </div>
+
+    <div id="saving" class="tab">
+        <label>월 납입액(원)</label><input type="text" inputmode="numeric" data-key="amount" placeholder="월 납입액">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" data-key="rate" placeholder="연 이자율" value="1.0">
+        <label>기간(개월)</label><input type="text" inputmode="numeric" data-key="month" placeholder="기간" value="12">
+        <label>이자 방식</label>
+        <select data-key="type">
+            <option value="compound">복리(은행식)</option>
+            <option value="simple">단리</option>
+        </select>
+        <button class="calculate" data-type="saving">계산하기</button>
+        <div class="result-box"></div>
+    </div>
+
+    <div id="loan" class="tab">
+        <label>대출금액(원)</label><input type="text" inputmode="numeric" data-key="amount" placeholder="대출 원금">
+        <label>연 이자율(%)</label><input type="text" inputmode="decimal" data-key="rate" placeholder="연 이자율" value="4.0">
+        <label>기간(개월)</label><input type="text" inputmode="numeric" data-key="month" placeholder="기간" value="120">
+        <label>상환 방식</label>
+        <select data-key="type">
+            <option value="amortization">원리금균등</option>
+            <option value="principal">원금균등</option>
+            <option value="bullet">만기일시</option>
+        </select>
+        <button class="calculate" data-type="loan">계산하기</button>
+        <div class="result-box"></div>
+    </div>
+</div>
+
+<script>
+// ===== 공통 유틸 =====
+const addComma=num=>{
+  const f=Number(num).toFixed(2);
+  return f.endsWith('.00')?Number(f).toLocaleString('ko-KR') : f.replace(/\B(?=(\d{3})+(?!\d))/g,",");
+};
+const uncomma=str=>parseFloat(String(str).replace(/,/g,"").replace(/[^\d.]/g,""))||0;
+
+// ===== 실시간 입력 콤마 처리 =====
+document.querySelectorAll('input[data-key]').forEach(input=>{
+  input.addEventListener('input',()=>{
+    let raw=input.value.replace(/,/g,'');
+    if(input.dataset.key==='amount'||input.dataset.key==='month') raw=raw.replace(/[^\d]/g,'');
+    else raw=raw.replace(/[^\d.]/g,'');
+    if(raw!==''){
+      const hasDot=raw.endsWith('.');
+      if(input.dataset.key==='rate') input.value=raw;
+      else input.value=Number(raw).toLocaleString('ko-KR',{maximumFractionDigits:0}) + (hasDot?'.':'');
+    }else input.value='';
+  });
+  input.addEventListener('blur',()=>{if(uncomma(input.value)===0) input.value='';});
+});
+
+// ===== TAB 기능 =====
+document.querySelectorAll('.tab-buttons button').forEach(btn=>{
+  btn.addEventListener('click',()=>{  
+    const tabId=btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    document.querySelectorAll('.tab-buttons button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelector(`#${tabId} .result-box`).innerHTML='';
+  });
+});
+
+// ===== 시계 =====
+function updateClock(){
+  const now=new Date();
+  const y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0'), d=String(now.getDate()).padStart(2,'0');
+  const days=["일","월","화","수","목","금","토"];
+  const wd=days[now.getDay()];
+  const hh=String(now.getHours()).padStart(2,'0'), mm=String(now.getMinutes()).padStart(2,'0'), ss=String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clockDisplay').textContent=`${y}-${m}-${d} (${wd}) ${hh}:${mm}:${ss}`;
+}
+setInterval(updateClock,1000); updateClock();
+
+// ===== 스크롤 =====
+const scrollToResult=btn=>{
+  const tab=btn.closest('.tab');
+  const result=tab.querySelector('.result-box');
+  if(result) result.scrollIntoView({behavior:'smooth', block:'start'});
+};
+
+// ===== 계산 함수 구조화 =====
+const TAX=0.154;
+
+const calculators={
+  deposit:({amount, rate, month, type})=>{
+    const P=amount, r=rate/100, m=month;
+    let total=0;
+    if(type==='simple') total=P*(1+r*(m/12));
+    else if(type==='monthly') total=P*Math.pow(1+r/12, m);
+    else if(type==='yearly') total=P*Math.pow(1+r, m/12);
+    const interest=total-P;
+    const tax=interest*TAX;
+    const afterTax=interest-tax;
+    return {P, interest, tax, afterTax, total:P+afterTax};
+  },
+  saving:({amount, rate, month, type})=>{
+    const A=amount, r=rate/100, n=month;
+    let total=0;
+    const paid=A*n;
+    if(type==='compound'){
+      const mRate=r/12;
+      for(let i=1;i<=n;i++) total+=A*Math.pow(1+mRate,n-i);
+    }else{
+      for(let i=0;i<n;i++) total+=A*(1+r*((n-i)/12));
+    }
+    const interest=total-paid, tax=interest*TAX, afterTax=interest-tax;
+    return {paid, interest, tax, afterTax, total:paid+afterTax};
+  },
+  loan:({amount, rate, month, type})=>{
+    const L=amount, r=rate/100/12, n=month;
+    let monthly=0, total=0, interest=0;
+    if(type==='amortization'){
+      if(n===0||r===0) {monthly=L/n; interest=0;}
+      else {monthly=L*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); total=monthly*n; interest=total-L;}
+    }else if(type==='principal'){
+      const principal=L/n; let intSum=0;
+      for(let i=0;i<n;i++) intSum+=(L-principal*i)*r; interest=intSum; total=L+interest; monthly=`매월 원금 ${addComma(principal)}원 + 이자(최초 ${addComma(principal+L*r)}원)`;}
+    else if(type==='bullet'){interest=L*r*n; total=L+interest; monthly=`매월 이자 ${addComma(L*r)}원 (마지막 달 원금 ${addComma(L)}원)`;}
+    return {monthly, interest, total};
+  }
+};
+
+// ===== 계산 버튼 이벤트 =====
+document.querySelectorAll('.calculate').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.closest('.tab');
+    const inputs=Array.from(tab.querySelectorAll('[data-key]')).reduce((acc,input)=>{
+      acc[input.dataset.key]=uncomma(input.value);
+      return acc;
+    },{});
+    const type=btn.dataset.type;
+    const res=calculators[type](inputs);
+    const box=tab.querySelector('.result-box');
+
+    if(type==='deposit') box.innerHTML=`
+      💰 <b>예금 결과 (세후)</b><br>
+      원금: ${addComma(res.P)}원<br>
+      세전 이자: ${addComma(res.interest)}원<br>
+      세금(15.4%): ${addComma(res.tax)}원<br>
+      세후 이자: <b>${addComma(res.afterTax)}원</b><br>
+      만기수령액: <b>${addComma(res.total)}원</b>
+    `;
+    else if(type==='saving') box.innerHTML=`
+      📦 <b>적금 결과 (세후)</b><br>
+      총 납입액: ${addComma(res.paid)}원<br>
+      세전 이자: ${addComma(res.interest)}원<br>
+      세금(15.4%): ${addComma(res.tax)}원<br>
+      세후 이자: <b>${addComma(res.afterTax)}원</b><br>
+      만기수령액: <b>${addComma(res.total)}원</b>
+    `;
+    else if(type==='loan') box.innerHTML=`
+      🏦 <b>대출 결과</b><br>
+      월 납입액: ${res.monthly}<br>
+      총 이자: ${addComma(res.interest)}원<br>
+      최종 상환액: <b>${addComma(res.total)}원</b>
+    `;
+    scrollToResult(btn);
+  });
+});
+
+// ===== 스타필드 =====
+const canvas=document.getElementById('space'), ctx=canvas.getContext('2d'); let w,h;
+function resize(){w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight;}
+window.addEventListener('resize',resize); resize();
+
+let stars=[]; const count=500; const focal=500;
+function initStars(){stars=[];for(let i=0;i<count;i++){stars.push({x:(Math.random()-0.5)*w,y:(Math.random()-0.5)*h,z:Math.random()*focal,speed:0.4+Math.random()});}}
+initStars();
+function animate(){ctx.clearRect(0,0,w,h); for(const s of stars){s.z-=s.speed; if(s.z<=0){s.z=focal; s.x=(Math.random()-0.5)*w; s.y=(Math.random()-0.5)*h;} const k=focal/s.z, px=s.x*k+w/2, py=s.y*k+h/2; ctx.fillStyle=`rgba(255,255,255,${1-s.z/focal})`; ctx.beginPath(); ctx.arc(px,py,1.2+(1-s.z/focal)*2,0,Math.PI*2); ctx.fill();} requestAnimationFrame(animate);}
+animate();
+</script>
+</body>
+</html>
